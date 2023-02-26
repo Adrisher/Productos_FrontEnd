@@ -7,34 +7,30 @@ import ProductForm from "./components/ProductForm";
 function App() {
   const [products, setProducts] = useState([]);
 
-  const fetchProducts = async () => {
-    try {
-      const { data } = await axios.get("https://reactmongo-production.up.railway.app/api/list");
-      setProducts(data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
-    fetchProducts();
+    axios.get("https://reactmongo-production.up.railway.app/api/list")
+      .then(({ data }) => {
+        setProducts(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, []);
 
   return (
     <>
-      <Container>
-        <h1 className="text-center mb-4">Tienda Adrisher</h1>
-        <Row>
-          <Col md={6}>
-            <ProductForm />
-          </Col>
-          <Col md={6}>
-          <div className="d-flex align-items-center mb-3">
+      <div className="container mt-3">
+        <div className="row">
+          <div className="col-lg-6">
+            <h1>Lista de productos</h1>
+            <ProductList products={products} setProducts={setProducts} />
           </div>
-          <ProductList products={products} />
-        </Col>
-        </Row> 
-      </Container>
+          <div className="col-lg-6">
+            <h1>Agregar producto</h1>
+            <ProductForm setProducts={setProducts} />
+          </div>
+        </div>
+      </div>
     </>
   );
 }

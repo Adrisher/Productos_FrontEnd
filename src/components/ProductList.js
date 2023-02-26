@@ -34,30 +34,25 @@ const ListProduct = ({ products, setProducts }) => {
 
     // Renderiza la lista de productos
     return (
-        <>
-            <h3 className="mb-3 mt-2">Productos</h3>
+        <ul className="list-group">
+            <li className="list-group-item active text-center fs-4">Lista de productos</li>
             {products.map((product) => {
                 const { _id, name, price, expiry_date } = product;
                 return (
-                    <div className="mb-3 border rounded p-3" key={_id}>
-                        <div className="d-flex justify-content-between mb-1">
-                            <div className="fw-bold">{name}</div>
-                            <div className="text-muted small">
-                                <FontAwesomeIcon icon={faTrash} className="cursor-pointer ms-2" onClick={() => deleteProduct(_id)} />
-                            </div>
+                    <li className="list-group-item d-flex justify-content-between align-items-center" key={_id}>
+                        <div>
+                            <h5 className="mb-0">{name}</h5>
+                            <div className="text-muted small">Fecha de caducidad: {new Date(expiry_date).toLocaleDateString()}</div>
                         </div>
                         <div>
-                            <div>
-                                <small>Costo: {price}</small>
-                            </div>
-                            <div>
-                                <small>Fecha de caducidad: {new Date(expiry_date).toLocaleDateString()}</small>
-                            </div>
+                            <span className="badge bg-primary rounded-pill">Costo: {price}</span>
+                            <button className="btn btn-danger ms-2" onClick={() => deleteProduct(_id)}>Eliminar</button>
                         </div>
-                    </div>
+                    </li>
                 );
             })}
-        </>
+        </ul>
+
     );
 };
 

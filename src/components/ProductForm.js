@@ -1,63 +1,74 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { FormGroup, Label, Input, Button, Alert } from 'reactstrap';
+import { Alert } from 'reactstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 
-const ProductForm = ({ setProducts }) => {
+const ProductForm = ({ products = [], setProducts = () => { } }) => {
+
     const [product, setProduct] = useState({ name: '', price: '', expiry_date: '' });
     const [formMessage, setFormMessage] = useState({ type: '', text: '' });
 
     const handleInputChange = (event) => {
-        setProduct({ ...product, [event.target.name]: event.target.value });
+        const { name, value } = event.target;
+        setProduct({ ...product, [name]: value });
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
+        const { name, price, expiry_date } = product;
 
-        if (!product.name) {
-            setFormMessage({ type: 'danger', text: 'Por favor ingrese un nombre' });
+        // Validaciones
+        if (!name || !price || !expiry_date) {
+            setFormMessage({ type: 'danger', text: 'Por favor complete todos los campos' });
             return;
         }
 
-        if (product.price <= 0) {
+        if (price <= 0) {
             setFormMessage({ type: 'danger', text: 'El precio debe ser mayor que 0' });
             return;
         }
 
-        axios
-            .post('https://reactmongo-production.up.railway.app/api/product', product)
-            .then(({ data }) => {
-                setProducts([...setProducts, data]);
-                setFormMessage({ type: 'success', text: 'Producto agregado con éxito' });
-                setProduct({ name: '', price: '', expiry_date: '' });
-            })
-            .catch((error) => {
-                console.log(error);
-                setFormMessage({ type: 'danger', text: 'Hubo un error al agregar el producto' });
-            });
-    };
+        const currentDate = new Date().toISOString().split('T')[0];
+        if (expiry_date < currentDate) {
+            setFormMessage({ type: 'danger', text: 'La fecha de caducidad debe ser posterior a la fecha actual' });
+            return;
+        }
 
+        try {
+            const response = await axios.post("https://reactmongo-production.up.railway.app/api/product", product);
+            setProducts([...products, response.data]);
+            setProduct({ name: '', price: '', expiry_date: '' }); // establecer los valores de los campos del formulario en una cadena vacía
+            setFormMessage({ type: 'success', text: 'Producto agregado con éxito' });
+        } catch (error) {
+            console.log(error);
+            setFormMessage({ type: 'danger', text: `Hubo un error al agregar el producto: ${error.message}` });
+        }
+    };
     return (
-        <div className="mb-3 border rounded p-3 mt-2">
-            <form onSubmit={handleSubmit}>
-                {formMessage.text && <Alert color={formMessage.type}>{formMessage.text}</Alert>}
-                <FormGroup>
-                    <Label for="name">Nombre Producto:</Label>
-                    <Input type="text" name="name" id="name" value={product.name} onChange={handleInputChange} />
-                </FormGroup>
-                <FormGroup>
-                    <Label for="price">Precio:</Label>
-                    <Input type="number" name="price" id="price" value={product.price} onChange={handleInputChange} />
-                </FormGroup>
-                <FormGroup>
-                    <Label for="expiry_date">Fecha de caducidad:</Label>
-                    <Input type="date" name="expiry_date" id="expiry_date" value={product.expiry_date} onChange={handleInputChange} />
-                </FormGroup>
-                <Button type="submit" color="danger" >
-                    Agregar
-                </Button>
-            </form>
-        </div>
+
+        <form onSubmit={handleSubmit} className="p-3 border rounded">
+            <div className="mb-3">
+                <label htmlFor="name" className="form-label">Nombre del producto</label>
+                <input type="text" className="form-control" id="name" name='name' value={product.name} onChange={handleInputChange} required />
+            </div>
+            <div className="mb-3">
+                <label htmlFor="price" className="form-label">Precio</label>
+                <div className="input-group">
+                    <span className="input-group-text">$</span>
+                    <input type="number" className="form-control" id="price" name='price' value={product.price} onChange={handleInputChange} min="0" step="0.01" required />
+                </div>
+            </div>
+            <div className="mb-3">
+                <label htmlFor="expiry_date" className="form-label">Fecha de caducidad</label>
+                <input type="date" className="form-control" id="expiry_date" name='expiry_date' value={product.expiry_date} onChange={handleInputChange} required />
+            </div>
+            <button type="submit" className="btn btn-primary"><FontAwesomeIcon icon={faPlusCircle} className="me-2" />Agregar producto</button>
+            {formMessage.text && <Alert color={formMessage.type}>{formMessage.text}</Alert>}
+        </form>
+
     );
 };
 
 export default ProductForm;
+
